@@ -20,53 +20,17 @@ set -euo pipefail
 rm -rf bazelisk bin
 mkdir bin
 
-go build
-./bazelisk build --config=release \
-    //:bazelisk-darwin-amd64 \
-    //:bazelisk-darwin-arm64 \
-    //:bazelisk-darwin-universal \
-    //:bazelisk-linux-amd64 \
-    //:bazelisk-linux-arm64 \
-    //:bazelisk-windows-amd64 \
-    //:bazelisk-windows-arm64 \
-    //deb:bazelisk-amd64_deb \
-    //deb:bazelisk-arm64_deb
-echo
-
-cp bazel-out/*-opt*/bin/bazelisk-darwin_amd64 bin/bazelisk-darwin-amd64
-cp bazel-out/*-opt*/bin/bazelisk-darwin_arm64 bin/bazelisk-darwin-arm64
-cp bazel-out/*-opt*/bin/bazelisk-darwin_universal bin/bazelisk-darwin
-cp bazel-out/*-opt*/bin/bazelisk-linux_amd64 bin/bazelisk-linux-amd64
-cp bazel-out/*-opt*/bin/bazelisk-linux_arm64 bin/bazelisk-linux-arm64
-cp bazel-out/*-opt*/bin/bazelisk-windows_amd64.exe bin/bazelisk-windows-amd64.exe
-cp bazel-out/*-opt*/bin/bazelisk-windows_arm64.exe bin/bazelisk-windows-arm64.exe
-cp bazel-out/*-opt*/bin/deb/bazelisk-amd64.deb bin/bazelisk-amd64.deb
-cp bazel-out/*-opt*/bin/deb/bazelisk-arm64.deb bin/bazelisk-arm64.deb
-rm -f bazelisk
-
 ### Build release artifacts using `go build`.
-# GOOS=linux GOARCH=amd64 go build -o bin/bazelisk-linux-amd64
-# GOOS=linux GOARCH=arm64 go build -o bin/bazelisk-linux-arm64
-# GOOS=darwin GOARCH=amd64 go build -o bin/bazelisk-darwin-amd64
-# GOOS=darwin GOARCH=arm64 go build -o bin/bazelisk-darwin-arm64
-# lipo -create -output bin/bazelisk-darwin bin/bazelisk-darwin-amd64 bin/bazelisk-darwin-arm64
-# GOOS=windows GOARCH=amd64 go build -o bin/bazelisk-windows-amd64.exe
-# GOOS=windows GOARCH=arm64 go build -o bin/bazelisk-windows-arm64.exe
+GOOS=linux GOARCH=amd64 go build -o bin/bazelisk-linux-amd64
+GOOS=linux GOARCH=arm64 go build -o bin/bazelisk-linux-arm64
+GOOS=linux GOARCH=s390x go build -o bin/bazelisk-linux-s390x
+GOOS=darwin GOARCH=amd64 go build -o bin/bazelisk-darwin-amd64
+GOOS=darwin GOARCH=arm64 go build -o bin/bazelisk-darwin-arm64
+GOOS=windows GOARCH=amd64 go build -o bin/bazelisk-windows-amd64.exe
+GOOS=windows GOARCH=arm64 go build -o bin/bazelisk-windows-arm64.exe
 
 ### Print some information about the generated binaries.
 echo "== Bazelisk binaries are ready =="
 ls -lh bin/*
 file bin/*
 echo
-
-echo "== Bazelisk version output =="
-echo "Before releasing, make sure that this is the correct version string:"
-"bin/bazelisk-$(uname -s | tr [:upper:] [:lower:])-amd64" version | grep "Bazelisk version"
-echo
-
-# Non-googlers: you should run this script with NPM_REGISTRY=https://registry.npmjs.org
-readonly REGISTRY=${NPM_REGISTRY:-https://wombat-dressing-room.appspot.com}
-echo "== NPM releases =="
-echo "After testing, publish to NPM via these commands:"
-echo "$ npm login --registry $REGISTRY"
-echo "$ ./bazelisk run --config=release //:npm_package.publish -- --access=public --tag latest --registry $REGISTRY"

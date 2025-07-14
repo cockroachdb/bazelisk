@@ -14,6 +14,7 @@ import (
 type platform struct {
 	Name           string
 	HasArm64Binary bool
+	HasS390xBinary bool
 }
 
 var supportedPlatforms = map[string]*platform{
@@ -24,6 +25,7 @@ var supportedPlatforms = map[string]*platform{
 	"linux": {
 		Name:           "linux",
 		HasArm64Binary: true,
+		HasS390xBinary: true,
 	},
 	"windows": {
 		Name:           "windows",
@@ -41,6 +43,12 @@ func GetPlatform() (string, error) {
 			return platform.Name + "_arm64", nil
 		}
 		return "", fmt.Errorf("arm64 %s is unsupported", runtime.GOOS)
+	}
+	if arch == "s390x" {
+		if platform.HasS390xBinary {
+			return platform.Name + "_s390x", nil
+		}
+		return "", fmt.Errorf("s390x %s is unsupported", runtime.GOOS)
 	}
 
 	return platform.Name, nil
@@ -63,8 +71,10 @@ func DetermineArchitecture(osName, version string) (string, error) {
 		machineName = "x86_64"
 	case "arm64":
 		machineName = "arm64"
+	case "s390x":
+		machineName = "s390x"
 	default:
-		return "", fmt.Errorf("unsupported machine architecture %q, must be arm64 or x86_64", runtime.GOARCH)
+		return "", fmt.Errorf("unsupported machine architecture %q, must be arm64, x86_64, or s390x", runtime.GOARCH)
 	}
 
 	if osName == "darwin" {
