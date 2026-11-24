@@ -13,8 +13,10 @@ import (
 )
 
 type platform struct {
-	Name           string
-	HasArm64Binary bool
+	Name             string
+	HasArm64Binary   bool
+	HasS390xBinary   bool
+	HasPpc64leBinary bool
 }
 
 var supportedPlatforms = map[string]*platform{
@@ -23,8 +25,10 @@ var supportedPlatforms = map[string]*platform{
 		HasArm64Binary: true,
 	},
 	"linux": {
-		Name:           "linux",
-		HasArm64Binary: true,
+		Name:             "linux",
+		HasArm64Binary:   true,
+		HasS390xBinary:   true,
+		HasPpc64leBinary: true,
 	},
 	"windows": {
 		Name:           "windows",
@@ -42,6 +46,18 @@ func GetPlatform() (string, error) {
 			return platform.Name + "_arm64", nil
 		}
 		return "", fmt.Errorf("arm64 %s is unsupported", runtime.GOOS)
+	}
+	if arch == "s390x" {
+		if platform.HasS390xBinary {
+			return platform.Name + "_s390x", nil
+		}
+		return "", fmt.Errorf("s390x %s is unsupported", runtime.GOOS)
+	}
+	if arch == "ppc64le" {
+		if platform.HasPpc64leBinary {
+			return platform.Name + "_ppc64le", nil
+		}
+		return "", fmt.Errorf("ppc64le %s is unsupported", runtime.GOOS)
 	}
 
 	return platform.Name, nil
@@ -64,8 +80,12 @@ func DetermineArchitecture(osName, version string) (string, error) {
 		machineName = "x86_64"
 	case "arm64":
 		machineName = "arm64"
+	case "s390x":
+		machineName = "s390x"
+	case "ppc64le":
+		machineName = "ppc64le"
 	default:
-		return "", fmt.Errorf("unsupported machine architecture %q, must be arm64 or x86_64", runtime.GOARCH)
+		return "", fmt.Errorf("unsupported machine architecture %q, must be arm64, x86_64, s390x, or ppc64le", runtime.GOARCH)
 	}
 
 	if osName == "darwin" {
